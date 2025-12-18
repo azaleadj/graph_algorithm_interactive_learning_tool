@@ -997,15 +997,15 @@ const stepOnce = useCallback(() => {
         console.log("Min red targets (correct answers):", minTargets);
         console.log("========================");
   
-        // 👉 这是 Practice front 唯一需要的“答案集合”
+        // Practice front answer set
         setMinRedTargets([...new Set(minTargets)]);
       } else {
         setMinRedTargets([]);
       }
   
-      // =================================================
-      // 标记 visited，并进入下一轮提问
-      // =================================================
+      //
+      // marked as visited，ask next question
+      // 
       setTimeout(() => {
         const newVisited = [...visited, minNode];
         setVisited(newVisited);
@@ -1302,9 +1302,9 @@ const stepOnce = useCallback(() => {
         "curve-style": "bezier",
         "line-color": (ele: any) => {
           const id = ele.id();
-          if (activeEdges.includes(id)) return "#ef4444"; // 🔴 比较中
-          if (confirmedEdges.includes(id)) return "#22c55e"; // 💚 已选中
-          return "#cbd5e1"; // 灰色
+          if (activeEdges.includes(id)) return "#ef4444"; // comparing
+          if (confirmedEdges.includes(id)) return "#22c55e"; // 
+          return "#cbd5e1"; // grey
         },
         "target-arrow-color": (ele: any) => {
           const id = ele.id();
@@ -1325,7 +1325,7 @@ const stepOnce = useCallback(() => {
             return d.undirected ? "none":"triangle";
           }
 
-          // example1 / example2：退回全局逻辑
+          // example1 / example2：back to globle logic
           return directed ? "triangle" : "none";
         },
 
@@ -1515,9 +1515,9 @@ const stepOnce = useCallback(() => {
                   return;
                 }
               
-                // =================================================
+                // 
                 // practice mode on → auto reset
-                // =================================================
+                //
                 const start = startNode || "A";
                 setStartNode(start);
               
@@ -1603,7 +1603,7 @@ const stepOnce = useCallback(() => {
             
           )}
 
-          {/* ======================= Phase 1: front ======================= */}
+          {/*  Phase 1: front  */}
           {practiceEnabled && practicePhase === "front" && challengeCur && (
             <div
               style={{
@@ -1627,7 +1627,7 @@ const stepOnce = useCallback(() => {
             </div>
           )}
 
-          {/* ======================= Phase 2: relax ======================= */}
+          {/* Phase 2: relax  */}
           {practiceEnabled && practicePhase === "relax" && challengeCur && (
             <div
               style={{
@@ -1749,7 +1749,11 @@ const stepOnce = useCallback(() => {
         
 
         
-        {/* ======================= cy程序在这里 ======================= */}
+        {/*
+        * Controls graph visualization and interaction using Cytoscape.js,
+        * including layout, visual highlighting, and step-based updates
+        * for BFS and Dijkstra algorithm demonstrations.
+        */}
         
 
 
@@ -1847,21 +1851,7 @@ const stepOnce = useCallback(() => {
 
                 if (isPlaying) return;
 
-                // Practice mode validation
-                // if (practiceEnabled && challengeCur) {
-                //    if (id === challengeCur) {
-                //     setHintVisible(false);
-                //     setFrontFeedback("correct");
-                //     // stepOnce();
-                    
-                //     applyPracticeStep(challengeCur);
-
-                //   } else {
-                //     setFrontFeedback("wrong");
-                //     setNarration(`❌ ${id} is incorrect. Try again.`);
-                //   }
-                //   return;
-                // }
+                
                 // Practice mode validation
                 if (practiceEnabled) {
                   setHintVisible(false);
