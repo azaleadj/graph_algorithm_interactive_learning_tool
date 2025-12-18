@@ -1,46 +1,71 @@
-# Getting Started with Create React App
+# Graph Algorithm Interactive Learning Tool
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+An interactive web-based learning tool for graph algorithms, focusing on **Breadth-First Search (BFS)** and **Dijkstra’s algorithm**.  
+The system is designed to support **step-by-step visualization**, **practice-based prediction**, and **user interaction** to help learners better understand algorithmic processes.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## Live Demo
 
-### `npm start`
+- BFS Visualization & Practice Mode:  
+  https://graph-algorithm-interactive-learnin.vercel.app/visualize/bfs
+  
+- Dijkstra Visualization & Practice Mode:  
+  https://graph-algorithm-interactive-learnin.vercel.app/visualize/dijkstra
+  
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+> Note: This is a single-page application. Direct links are supported via server-side routing configuration.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+---
 
-### `npm test`
+## Key Features
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Interactive visualization of BFS and Dijkstra’s algorithm
+- Step-by-step execution with animation
+- **Practice mode**: users predict the next node selection and receive immediate feedback
+- Support for **directed and undirected graphs**
+- User-defined graph construction and editing
+- Clear visual distinction between:
+  - undiscovered nodes,
+  - active nodes,
+  - visited nodes,
+  - candidate edges and confirmed paths
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+##  Educational Design
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- The practice mode focuses on **global decision-making**, rather than local edge comparisons.
+> Note: Please select a start node before enabling Practice Mode.
+> Practice Mode assumes that the algorithm has already been initialized.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-### `npm run eject`
+- For Dijkstra’s algorithm, the next node is selected based on the **global minimum distance among all unvisited nodes**.
+- Defensive initialization is used to ensure robustness during dynamic node and edge creation.
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+---
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Known Issue
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+For user-defined graphs, Practice Mode should be enabled only after the algorithm has been executed once using Play in the deployed version. This issue does not occur in local development and is under investigation.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
 
-## Learn More
+## Implementation
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- Frontend: React + TypeScript
+- Graph visualization: Cytoscape.js
+- State management: React hooks
+- Routing: React Router
+- Deployment: Vercel
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Key implementation files:
+- `src/BfsDemo.tsx`
+- `src/DijkstraDemo.tsx`
+
+---
+
+## Running Locally
+
+```bash
+npm install
+npm start
