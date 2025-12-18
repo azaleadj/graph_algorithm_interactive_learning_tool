@@ -1,0 +1,26 @@
+.eh-handle {
+    background-color: #2563eb !important;
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50% !important;
+    border: 2px solid white !important;
+  }
+  
+  .eh-hover {
+    background-color: #3b82f6 !important;
+  }
+  
+  .eh-edge {
+    stroke: #2563eb !important;
+    stroke-width: 3px !important;
+  }
+  
+  .eh-preview {
+    stroke: #60a5fa !important;
+    stroke-width: 2px !important;
+  }
+  
+  .eh-source {
+    border-color: #2563eb !important;
+  }
+  

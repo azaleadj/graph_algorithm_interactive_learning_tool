@@ -8,7 +8,7 @@ type GraphSpec = {
     elements: Ele[];
     directed: boolean;
     layout: {
-      name: "breadthfirst" | "grid" | "circle" | "preset";  
+      name: "breadthfirst" | "grid" | "circle";  // 增加 "circle"
       rows?: number;
       cols?: number;
     };
@@ -18,7 +18,7 @@ type GraphSpec = {
 
 type PracticePhase = "idle" | "front" | "enqueue";
 
-// ---------- graph define ----------
+// ---------- 五种图的定义 ----------
 const makeGraph = (type: GraphType): GraphSpec => {
   switch (type) {
     case "tree": {
@@ -48,11 +48,11 @@ const makeGraph = (type: GraphType): GraphSpec => {
           ...edges.map((e) => ({ data: e })),
         ];
       
-        //  circle layout
+        // ✅ 使用 circle 布局，确保环形排列
         return {
           elements,
           directed: true,
-          layout: { name: "circle" }, 
+          layout: { name: "circle" }, // ← 改成 circle！
           defaultStart: "A",
         };
     }
@@ -110,7 +110,7 @@ const makeGraph = (type: GraphType): GraphSpec => {
   }
 };
 
-// Queue Bubbles (with Practice-Feedback Outline)
+// 队列气泡（带练习反馈描边）
 const QueueBubble: React.FC<{
   label: string;
   isHead?: boolean;
@@ -144,18 +144,18 @@ const QueueBubble: React.FC<{
   );
 };
 
-// ---------- components----------
+// ---------- 组件 ----------
 const BfsDemo: React.FC = () => {
-  // graph type
+  // 图类型
   const [graphType, setGraphType] = useState<GraphType>("tree");
 
-  // current graph
+  // 当前图
   const initial = makeGraph("tree");
   const [elements, setElements] = useState<Ele[]>(initial.elements);
   const [directed, setDirected] = useState<boolean>(initial.directed);
   const [layoutSpec, setLayoutSpec] = useState(initial.layout);
 
-  // BFS state
+  // BFS 状态
   const [startNode, setStartNode] = useState<string>(initial.defaultStart);
   const [queue, setQueue] = useState<string[]>([initial.defaultStart]);
   const [visited, setVisited] = useState<string[]>([]);
@@ -165,25 +165,22 @@ const BfsDemo: React.FC = () => {
   const [parents, setParents] = useState<Record<string, string | null>>({});
   const [visitedEdges, setVisitedEdges] = useState<string[]>([]);
   
-  //button
-  const btn = "px-3 py-1 border border-gray-400 rounded bg-gray-50 hover:bg-gray-100 cursor-pointer";
 
-
-  // play control
+  // 播放控制
   const [isPlaying, setIsPlaying] = useState(false);
   const [stepDelay, setStepDelay] = useState(600);
   const timerRef = useRef<number | null>(null);
   const cyRef = useRef<any>(null);
 
-  //  practice mode
+  // 练习模式
   const [practiceEnabled, setPracticeEnabled] = useState(false);
   const [practicePhase, setPracticePhase] = useState<PracticePhase>("idle");
-  // stedge 1（front）
+  // 阶段1（front）
   const [frontScore, setFrontScore] = useState(0);
   const [frontAttempts, setFrontAttempts] = useState(0);
   const [flashId, setFlashId] = useState<string | null>(null);
   const [lastFrontCorrect, setLastFrontCorrect] = useState<boolean | null>(null);
-  // stedge 2（enqueue）
+  // 阶段2（enqueue）
   const [enqueueScore, setEnqueueScore] = useState(0);
   const [enqueueAttempts, setEnqueueAttempts] = useState(0);
   const [challengeCur, setChallengeCur] = useState<string | null>(null);
@@ -196,16 +193,16 @@ const BfsDemo: React.FC = () => {
     extra: string[];
   }>(null);
   const [autoApply, setAutoApply] = useState(false);
-  // Task blink control
+  // Task 闪烁控制
   const [taskFlash, setTaskFlash] = useState(false);
 
-  // all nodes id
+  // 所有节点 id
   const nodeIds = useMemo(
     () => elements.filter((el) => !el.data?.source).map((el) => el.data.id as string),
     [elements]
   );
 
-  // Adjacency List (for Directed and Undirected Graphs)
+  // 邻接表（考虑有向/无向）
   const adjacency = useMemo(() => {
     const adj: Record<string, string[]> = {};
     elements.forEach((el) => {
@@ -225,7 +222,7 @@ const BfsDemo: React.FC = () => {
     return adj;
   }, [elements, directed]);
 
- // ---------- while shifting graph types ----------
+ // ---------- 当切换图类型时 ----------
 useEffect(() => {
     const spec = makeGraph(graphType);
     setElements(spec.elements);
@@ -236,7 +233,7 @@ useEffect(() => {
     const nextStart = nodes.includes("A") ? "A" : (nodes[0] ?? "");
     setStartNode(nextStart);
   
-    // reset BFS state
+    // 重置 BFS 状态
     setQueue(nextStart ? [nextStart] : []);
     setVisited([]);
     setCurrent(null);
@@ -245,7 +242,7 @@ useEffect(() => {
     setParents({});
     setNarration(`Graph: ${graphType}. Start from ${nextStart || "(none)"}. Click Step/Play to begin.`);
   
-    // select layout according to layoutSpec.name 
+    // 关键改动：根据 layoutSpec.name 选择布局
     setTimeout(() => {
       if (!cyRef.current) return;
   
@@ -281,7 +278,7 @@ useEffect(() => {
   }, [graphType]);
   
 
-  // step BFS
+  // 单步 BFS
   const stepOnce = useCallback(() => {
     if (queue.length === 0) {
       setCurrent(null);
@@ -306,7 +303,7 @@ useEffect(() => {
       const neighbors = (adjacency[cur] ?? []).filter(
         (n) => !newVisited.includes(n) && !preQueue.includes(n)
       );
-      // On neighbor discovery: parent[neighbor] = cur (only if unset).
+      // 发现邻居时记录它们的父亲 = 当前节点 cur（只在没记录过时）
       setParents(prev => {
         const next = { ...prev };
         neighbors.forEach(n => {
@@ -337,27 +334,19 @@ useEffect(() => {
         }
       }
 
-
+      // 更新红色边集合：保留所有通向未访问节点的边
       setHighlightedEdges((prev) => {
+        // 把当前新发现的红边加入
         const combined = [...prev, ...newEdges];
-      
+        // 过滤掉那些“目标节点已经访问过”的红边
         const stillActive = combined.filter((edgeId) => {
           const edge = elements.find((el) => el.data?.id === edgeId);
           if (!edge) return false;
-      
-          const { source, target } = edge.data;
-      
-          // Keep the red edge if at least one endpoint is unvisited
-          return (
-            !newVisited.includes(source) ||
-            !newVisited.includes(target)
-          );
+          const target = edge.data?.target;
+          return !newVisited.includes(target); // 目标节点未访问 => 保留红色
         });
-      
         return [...new Set(stillActive)];
       });
-      
-      
       
 
       if (nextQueue.length === 0) {
@@ -377,7 +366,7 @@ useEffect(() => {
   }, [queue, visited, adjacency, elements]);
 
 
-  // automatic play
+  // 自动播放
   const clearTimer = () => {
     if (timerRef.current !== null) {
       window.clearTimeout(timerRef.current);
@@ -399,7 +388,7 @@ useEffect(() => {
 
   useEffect(() => () => clearTimer(), []);
 
-  // 加上 Task 闪烁的监听 Task listening
+  // 加上 Task 闪烁的监听
   useEffect(() => {
     if (practicePhase === "idle") return;
     setTaskFlash(true);
@@ -413,7 +402,7 @@ useEffect(() => {
     };
   }, [practicePhase]);
 
-  // =====  practice mode functions =====
+  // ===== 练习模式：工具函数 =====
   const computeNextEnqueueTargets = useCallback(() => {
     if (queue.length === 0)
       return { cur: null as string | null, targets: [] as string[], options: [] as string[] };
@@ -427,7 +416,7 @@ useEffect(() => {
     return { cur, targets, options };
   }, [queue, visited, adjacency, nodeIds]);
 
-  //practice （predict deque node)
+  // ===== 练习：阶段1（预测出队）=====
   const handlePredictFront = (guessId: string) => {
     if (!practiceEnabled || practicePhase !== "front") return;
     if (isPlaying) {
@@ -463,7 +452,7 @@ useEffect(() => {
     }
   };
 
-  // ===== practice：（predict enque node）=====
+  // ===== 练习：阶段2（预测入队集合）=====
   const toggleEnqueueGuess = (id: string) => {
     if (!practiceEnabled || practicePhase !== "enqueue") return;
     setEnqueueGuess((prev) =>
@@ -503,7 +492,7 @@ useEffect(() => {
     if (isPlaying) return;
     const ok = stepOnce();
     if (ok) {
-      // After execution, move to the next “front-of-queue prediction” round
+      // 执行后，进入下一轮“预测出队”
       setPracticePhase(practiceEnabled ? "front" : "idle");
       setChallengeCur(null);
       setEnqueueOptions([]);
@@ -511,7 +500,7 @@ useEffect(() => {
       setEnqueueGuess([]);
       setEnqueueFeedback(null);
 
-      //  Provide a hint for the next step (if not finished)
+      // 给出下一步提示（若未结束）
       setTimeout(() => {
         if (queue.length > 0) {
           setNarration((prev) =>
@@ -524,7 +513,7 @@ useEffect(() => {
     }
   };
 
-  // controllers
+  // 控件
   const resetPractice = (spec?: GraphSpec, nextStart?: string) => {
     if (practiceEnabled) setPracticePhase("front");
     else setPracticePhase("idle");
@@ -539,11 +528,83 @@ useEffect(() => {
     setEnqueueGuess([]);
     setEnqueueFeedback(null);
 
-    
+    // 重新布局（可选）
+    if (cyRef.current && (spec || layoutSpec)) {
+      const s = nextStart ?? startNode;
+      const lay =
+        (spec?.layout.name ?? layoutSpec.name) === "breadthfirst"
+          ? cyRef.current.layout({
+              name: "breadthfirst",
+              directed: true,
+              roots: s ? `#${s}` : undefined,
+              padding: 20,
+              spacingFactor: 1.3,
+              animate: true,
+            })
+          : cyRef.current.layout({
+              name: "grid",
+              rows: spec?.layout.rows ?? layoutSpec.rows,
+              cols: spec?.layout.cols ?? layoutSpec.cols,
+              padding: 20,
+              animate: true,
+            });
+      lay.run();
+      cyRef.current.fit();
+    }
   };
 
+  
+  // const applyLayout = useCallback(
+  //   (start?: string) => {
+  //     setTimeout(() => {
+  //       if (!cyRef.current) return;
 
-  // Adaptive Layout Function (by Graph Type & Layout Spec)
+  //       let layout;
+  //       // 🧠 智能判断是否树形图（用于 roots 参数）
+  //       const isTree = graphType === "tree";
+  //       const isUndirected = graphType === "undirected" || graphType === "disconnected";
+
+  //       if (layoutSpec.name === "breadthfirst") {
+  //         layout = cyRef.current.layout({
+  //           name: "breadthfirst",
+  //           directed: true,
+  //           roots: isTree ? (start ? `#${start}` : undefined) : undefined, // ✅ 非树图不强制指定 root
+  //           direction: isTree ? "downward" : undefined, // ✅ 树向下展开
+  //           circle: !isTree, // ✅ 非树图改为环形分布
+  //           spacingFactor: 1.3,
+  //           padding: 30,
+  //           animate: true,
+  //         });
+  //       } else if (layoutSpec.name === "grid") {
+  //         layout = cyRef.current.layout({
+  //           name: "grid",
+  //           rows: layoutSpec.rows,
+  //           cols: layoutSpec.cols,
+  //           padding: 20,
+  //           animate: true,
+  //         });
+  //       } else if (layoutSpec.name === "circle") {
+  //         layout = cyRef.current.layout({
+  //           name: "circle",
+  //           padding: 20,
+  //           animate: false, // ✅ 去掉动画，防止“抖动”
+  //         });
+  //       } else {
+  //         // 兜底：默认使用 concentric 布局
+  //         layout = cyRef.current.layout({
+  //           name: "concentric",
+  //           padding: 30,
+  //           animate: true,
+  //         });
+  //       }
+
+  //       layout?.run();
+  //       cyRef.current.fit();
+  //     }, 50);
+  //   },
+  //   [layoutSpec, graphType]
+  // );
+  // 通用布局函数：根据 graphType 与 layoutSpec 智能选择布局参数
   // 
   const applyLayout = useCallback(
     (start?: string) => {
@@ -557,26 +618,26 @@ useEffect(() => {
         const isCyclic = graphType === "cyclic";
   
         if (isTree) {
-          // Determine whether the current node is a “leaf node” 
+          // 判断当前节点是否为“叶子节点”
           const neighbors = cyRef.current
             ?.nodes(`#${start}`)
             ?.connectedEdges()
             ?.length ?? 0;
-          const isLeafRoot = neighbors <= 1; // A node is considered a leaf if its degree ≤ 1.
+          const isLeafRoot = neighbors <= 1; // 度数<=1，视为叶子
         
           layout = cyRef.current.layout({
             name: "breadthfirst",
             directed: true,
             roots: start ? `#${start}` : undefined,
-            direction: isLeafRoot ? "upward" : "downward", // If the start node is a leaf, reverse the layout direction.
-            spacingFactor: 1.4, // Slightly increase the spacing to avoid crowding.
+            direction: isLeafRoot ? "upward" : "downward", // ✅ 如果起点是叶子，则反转布局方向
+            spacingFactor: 1.4, // 稍微加大间距避免挤压
             padding: 40,
             avoidOverlap: true,
             animate: true,
           });
         }
         
-        // Circular graph: preserve the circular shape.
+        // 环形图：保持圆形
         else if (isCyclic) {
           layout = cyRef.current.layout({
             name: "circle",
@@ -584,20 +645,19 @@ useEffect(() => {
             animate: false,
           });
         }
-        // Undirected or disconnected graphs: use the "cose" layout (natural force-directed spreading)
-
+        // 无向或非连通图：使用 "cose" 布局（自然散开）
         else if (isUndirected) {
           layout = cyRef.current.layout({
-            name: "cose", // force-directed layout
+            name: "cose", // “力导向”布局
             padding: 30,
             animate: true,
-            nodeRepulsion: 8000, // inter-node spacing
+            nodeRepulsion: 8000, // 节点间距
             idealEdgeLength: 100,
             gravity: 0.25,
             numIter: 1000,
           });
         }
-        // Grid or other layout
+        // Grid 或其他
         else if (layoutSpec.name === "grid") {
           layout = cyRef.current.layout({
             name: "grid",
@@ -607,7 +667,7 @@ useEffect(() => {
             animate: true,
           });
         }
-        // Fallback to a concentric layout.
+        // 兜底 concentric
         else {
           layout = cyRef.current.layout({
             name: "concentric",
@@ -641,14 +701,14 @@ useEffect(() => {
     setNarration(`Ready. Starting from ${s || "(none)"}.`);
     resetPractice?.();
   
-    applyLayout(s); //Call the general layout function
+    applyLayout(s); // 调用通用布局函数
   };
     
   
 
   const handleStep = () => {
     if (isPlaying) return;
-    // manually step：during practice，back to front stedge
+    // 手动 step：如果在练习中，回到 front 阶段
     setPracticePhase(practiceEnabled ? "front" : "idle");
     setChallengeCur(null);
     setEnqueueOptions([]);
@@ -664,7 +724,7 @@ useEffect(() => {
       setIsPlaying(false);
       setNarration((n) => `${n} (Paused)`);
     } else {
-      // quit practice when playing 
+      // 播放时退出练习阶段，避免冲突
       setPracticePhase("idle");
       setChallengeCur(null);
       setEnqueueOptions([]);
@@ -694,7 +754,7 @@ useEffect(() => {
     cyRef.current?.fit();
   };
 
-  // layout config
+  // 布局配置
   const layoutProp = useMemo(() => {
     if (layoutSpec.name === "grid") {
       return {
@@ -714,7 +774,7 @@ useEffect(() => {
       } as any;
     }
   
-    //  breadthfirst as default
+    // 默认 breadthfirst
     return {
       name: "breadthfirst",
       directed: true,
@@ -727,7 +787,7 @@ useEffect(() => {
   // }, [layoutSpec, startNode]);
   }, [layoutSpec]);
   
-  //  css
+  // 样式表
   const stylesheet = [
     {
       selector: "node",
@@ -760,13 +820,16 @@ useEffect(() => {
         "font-size": 10,
         "text-rotation": "autorotate",
         "text-margin-y": -6,
-        
+        // "line-color": (ele: any) =>
+        //   highlightedEdges.includes(ele.id()) ? "#ef4444" : "#cbd5e1",
+        // "target-arrow-color": (ele: any) =>
+        //   highlightedEdges.includes(ele.id()) ? "#ef4444" : "#cbd5e1",
         
         "line-color": (ele: any) => {
         const id = ele.id();
-        if (highlightedEdges.includes(id)) return "#ef4444"; // current -red
-        if (visitedEdges.includes(id)) return "#22c55e";     // visited - green
-        return "#cbd5e1";                                    // default -grey
+        if (highlightedEdges.includes(id)) return "#ef4444"; // 当前步红色
+        if (visitedEdges.includes(id)) return "#22c55e";     // 已走过绿色
+        return "#cbd5e1";                                    // 默认灰色
       },
       "target-arrow-color": (ele: any) => {
         const id = ele.id();
@@ -791,30 +854,18 @@ useEffect(() => {
         <b>Graph Algorithm Visualization — BFS</b>
       </div>
 
-      {/* main body */}
+      {/* 主体 */}
       <div style={{ display: "grid", gridTemplateColumns: "360px 1fr 320px", gap: 12, padding: 12 }}>
-        {/* left controller part */}
+        {/* 左侧控制区 */}
         <div style={{ display: "grid", gap: 10, alignContent: "start" }}>
-          {/* graph selector */}
+          {/* 图选择器 */}
           <div>
-            <div style={{ fontSize: 12, color: "#334155", marginBottom: 6,fontWeight:"800" }}>Graph Type</div>
-           
+            <div style={{ fontSize: 12, color: "#475569", marginBottom: 6 }}>Graph Type</div>
             <select
               value={graphType}
               onChange={(e) => setGraphType(e.target.value as GraphType)}
-              className="
-                w-full
-                px-3 py-2
-                border border-gray-300
-                rounded-md
-                bg-white
-                shadow-sm
-                cursor-pointer
-                focus:outline-none
-                focus:ring-2 focus:ring-blue-300
-              "
+              style={{ width: "100%", padding: 8 }}
             >
-
               <option value="tree">Tree (Directed)</option>
               <option value="cyclic">Cyclic (Directed)</option>
               <option value="disconnected">Disconnected (Directed)</option>
@@ -823,85 +874,45 @@ useEffect(() => {
             </select>
           </div>
 
-          
-
-          {!practiceEnabled && (
-            <div style={{ fontSize: 13, color: "#334155" }}>
-              <div>
-                <b>Start node:</b>{" "}
-                <span style={{ color: "#2563eb" }}>{startNode || "(none)"}</span>
-              </div>
-
-              <div style={{ marginTop: 4 }}>
-                👉 Click any node on the graph to set it as the start
-                {isPlaying && <span style={{ color: "#ef4444" }}> (pause first)</span>}
-              </div>
+          {/* 起点信息 */}
+          <div style={{ fontSize: 13, color: "#334155" }}>
+            <div>
+              <b>Start node:</b>{" "}
+              <span style={{ color: "#2563eb" }}>{startNode || "(none)"}</span>
             </div>
-          )}
-
-
-          {/* control button */}
-          <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
-            <button
-              onClick={handleStart}
-              disabled={isPlaying}
-              className="px-3 py-2 border border-gray-400 rounded bg-gray-50 hover:bg-gray-100 disabled:opacity-50"
-            >
-              Start
-            </button>
-
-            <button
-              onClick={handleStep}
-              disabled={isPlaying || isFinished}
-              className="
-                px-3 py-2
-                border border-gray-400
-                rounded
-                bg-gray-50
-                hover:bg-gray-100
-                disabled:opacity-50
-                disabled:cursor-not-allowed
-              "
-            >
-              Step
-            </button>
-
-            
-            <button
-              onClick={handlePlayToggle}
-              disabled={isFinished}
-              className="
-                px-3 py-2
-                border border-gray-400
-                rounded
-                bg-gray-50
-                hover:bg-gray-100
-                disabled:opacity-50
-                disabled:cursor-not-allowed
-              "
-            >
-              {isPlaying ? "Pause" : "Play"}
-            </button>
-
-
-
-            <button
-              onClick={handleReset}
-              className="
-                px-3 py-2
-                border border-gray-400
-                rounded
-                bg-gray-50
-                hover:bg-gray-100
-                cursor-pointer
-              "
-            >
-              Reset
-            </button>
-
+            <div style={{ marginTop: 4 }}>
+              Click any node on the graph to set it as the start
+              {isPlaying && <span style={{ color: "#ef4444" }}> (pause first)</span>}
+            </div>
           </div>
 
-          {/* speed adjust */}
+          {/* 控制按钮 */}
+          <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
+            <button onClick={handleStart} disabled={isPlaying} style={{ padding: "8px 12px" }}>
+              Start
+            </button>
+            <button onClick={handleStep} disabled={isPlaying || isFinished} style={{ padding: "8px 12px" }}>
+              Step
+            </button>
+            <button onClick={handlePlayToggle} disabled={isFinished} style={{ padding: "8px 12px" }}>
+              {isPlaying ? "Pause" : "Play"}
+            </button>
+            <button
+              onClick={() => applyPredictedStep(false)}
+              disabled={
+                practicePhase !== "enqueue" ||
+                (!!enqueueFeedback && !enqueueFeedback.correct)
+              }
+              style={{ padding: "8px 12px" }}
+            >
+              Apply Step
+            </button>
+            <button onClick={handleReset} style={{ padding: "8px 12px" }}>
+              Reset
+            </button>
+          </div>
+
+          {/* 速度调节 */}
           <div style={{ marginTop: 16 }}>
             <div style={{ fontSize: 12, color: "#475569", marginBottom: 6 }}>Speed (ms / step)</div>
             <input
@@ -916,7 +927,7 @@ useEffect(() => {
             <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>{stepDelay} ms</div>
           </div>
 
-          {/* practice mode */}
+          {/* 练习模式 */}
           <div style={{ marginTop: 12, display: "grid", gap: 8 }}>
             <label style={{ fontSize: 13, userSelect: "none" }}>
               <input
@@ -951,7 +962,7 @@ useEffect(() => {
 
             <div
             style={{
-                background: taskFlash ? "#c7d2fe" : "#eef2ff",      // brighter when flash
+                background: taskFlash ? "#c7d2fe" : "#eef2ff",      // 闪烁时更亮
                 borderLeft: "4px solid #6366f1",
                 padding: "8px 10px",
                 borderRadius: 6,
@@ -960,7 +971,7 @@ useEffect(() => {
                 fontWeight: 600,
                 marginBottom: 6,
                 boxShadow: taskFlash
-                ? "0 0 10px 2px rgba(99,102,241,0.6)"             
+                ? "0 0 10px 2px rgba(99,102,241,0.6)"             // 发光
                 : "0 1px 3px rgba(0,0,0,0.1)",
                 transition: "all 0.3s ease",
             }}
@@ -979,7 +990,7 @@ useEffect(() => {
               Enqueue score: <b>{enqueueScore}</b> / {enqueueAttempts}
             </div>
 
-            {/* pannel -stedge 2 */}
+            {/* 阶段2面板 */}
             {practiceEnabled && practicePhase === "enqueue" && challengeCur && (
               <div style={{ marginTop: 6, padding: 8, border: "1px dashed #cbd5e1", borderRadius: 8 }}>
                 <div style={{ fontSize: 13, marginBottom: 6 }}>
@@ -1007,38 +1018,16 @@ useEffect(() => {
                   })}
                 </div>
                 <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                  
-                  <button
-                    onClick={submitEnqueueGuess}
-                    className="
-                      px-3 py-2
-                      border border-gray-400
-                      rounded
-                      bg-gray-50
-                      hover:bg-gray-100
-                      cursor-pointer
-                    "
-                  >
+                  <button onClick={submitEnqueueGuess} style={{ padding: "6px 10px" }}>
                     Check
                   </button>
-
                   <button
                     onClick={() => applyPredictedStep(false)}
                     disabled={!enqueueFeedback || !enqueueFeedback.correct}
-                    className="
-                      px-3 py-2
-                      border border-gray-400
-                      rounded
-                      bg-gray-50
-                      hover:bg-gray-100
-                      cursor-pointer
-                      disabled:opacity-50
-                      disabled:cursor-not-allowed
-                    "
+                    style={{ padding: "6px 10px" }}
                   >
                     Apply Step
                   </button>
-
                 </div>
                 {enqueueFeedback && (
                   <div style={{ fontSize: 12, marginTop: 6, color: enqueueFeedback.correct ? "#16a34a" : "#b91c1c" }}>
@@ -1058,7 +1047,7 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* graph area */}
+        {/* 图区域 */}
         <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden" }}>
           <CytoscapeComponent
             elements={elements as any}
@@ -1069,9 +1058,56 @@ useEffect(() => {
               cyRef.current = cy;
               cy.fit();
 
-              //  set start or practice
+              // 点击节点：练习或设置起点
               cy.off("tap", "node");
-           
+              // cy.on("tap", "node", (evt: any) => {
+              //   const id = evt.target.id();
+              //   if (isPlaying) {
+              //     setNarration("Pause first to interact.");
+              //     return;
+              //   }
+              //   if (practiceEnabled) {
+              //     if (practicePhase === "front") {
+              //       handlePredictFront(id);
+              //       return;
+              //     }
+              //     if (practicePhase === "enqueue") {
+              //       if (enqueueOptions.includes(id)) toggleEnqueueGuess(id);
+              //       return;
+              //     }
+              //   }
+              //   // 非练习：设置起点
+              //   setStartNode(id);
+              //   setQueue([id]);
+              //   setVisited([]);
+              //   setCurrent(null);
+              //   setHighlightedEdges([]);
+              //   setNarration(`Start node set to ${id}. Click Step/Play to begin.`);
+
+              //   const lay =
+              //     layoutSpec.name === "breadthfirst"
+              //       ? cy.layout({
+              //           name: "breadthfirst",
+              //           directed: true,
+              //           roots: [`#${id}`],
+              //           padding: 20,
+              //           spacingFactor: 1.3,
+              //           avoidOverlap: true,
+              //           animate: true,
+              //         })
+              //       : cy.layout({
+              //           name: "grid",
+              //           rows: layoutSpec.rows,
+              //           cols: layoutSpec.cols,
+              //           padding: 20,
+              //           animate: true,
+              //         });
+              //   lay.run();
+              //   cy.fit();
+
+              //   // 重置练习状态
+              //   resetPractice();
+              // });
               cy.on("tap", "node", (evt: any) => {
                 const id = evt.target.id();
               
@@ -1080,28 +1116,35 @@ useEffect(() => {
                   return;
                 }
               
-                // practice mode
+                // 练习模式
                 if (practiceEnabled) {
                   if (practicePhase === "front") return handlePredictFront(id);
                   if (practicePhase === "enqueue" && enqueueOptions.includes(id))
                     return toggleEnqueueGuess(id);
                 }
               
-               
-                // clear BFS state and color
+                // // 普通模式
+                // setStartNode(id);
+                // setQueue([id]);
+                // setVisited([]);
+                // setCurrent(null);
+                // setHighlightedEdges([]);
+                // setNarration(`Start node set to ${id}. Click Step/Play to begin.`);
+                // resetPractice();
+                // ✅ 清除 BFS 状态与颜色
                 setVisited([]);
                 setHighlightedEdges([]);
-                setVisitedEdges([]); //  clear green line
-                setParents({});      // 
+                setVisitedEdges([]); // ✅ 清空绿色线条
+                setParents({});      // ✅ 清空父子关系
 
-                //  common mode
+                // 普通模式
                 setStartNode(id);
                 setQueue([id]);
                 setCurrent(null);
                 setNarration(`Start node set to ${id}. Click Step/Play to begin.`);
                 resetPractice();
 
-               
+                // 不再重新布局
                 cy.fit(cy.$(`#${id}`), 100);
 
 
@@ -1113,7 +1156,7 @@ useEffect(() => {
           />
         </div>
 
-        {/* right state */}
+        {/* 右侧状态 */}
         <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 10 }}>
           <h4 style={{ margin: "6px 0 10px" }}>Queue</h4>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -1162,7 +1205,7 @@ useEffect(() => {
           <h4 style={{ margin: "16px 0 6px" }}>Current</h4>
           <div>{current ?? <span style={{ color: "#94a3b8" }}>(none)</span>}</div>
 
-          {/* color legent  */}
+          {/* ===== 颜色解读 ===== */}
           <h4 style={{ margin: "16px 0 6px" }}>Color Legend</h4>
           <div style={{ display: "grid", gap: 4, fontSize: 13 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
