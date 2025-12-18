@@ -281,28 +281,28 @@ const DijkstraDemo: React.FC = () => {
   
     const adj: Record<string, { target: string; weight: number }[]> = {};
   
-    // 1️⃣ 初始化所有节点
+    // initialize all nodes
     elements.forEach((el) => {
       if (el.data?.id && !el.data?.source) {
         adj[el.data.id] = [];
       }
     });
   
-    // 2️⃣ 处理边
+    // handle edges
     elements.forEach((el) => {
       const d = el.data;
       if (!d?.source || !d?.target) return;
   
       const w = d.weight ?? 1;
   
-      // 防御式初始化（防止 add node / add edge 瞬间崩）
+      // Defensive initialization to avoid crashes when adding nodes or edges
       if (!adj[d.source]) adj[d.source] = [];
       if (!adj[d.target]) adj[d.target] = [];
   
-      // 正向边（永远加）
+      // directed
       adj[d.source].push({ target: d.target, weight: w });
   
-      // ⭐ 无向图：自动加反向
+      // undirected 
       if (!directed) {
         adj[d.target].push({ target: d.source, weight: w });
       }
